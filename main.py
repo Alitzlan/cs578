@@ -33,9 +33,12 @@ def main():
     # Added
     print "Starts doing PCA"
     num_parameter = len(bin_data[0])
-    pca = PCA(n_components = 2)
+    pca = PCA(n_components = num_parameter)
     pca.fit(bin_data)
     print(pca.explained_variance_ratio_)
+
+    bin_data = np.multiply(bin_data, pca.components)
+    print bin_data
     
 if __name__ == "__main__":
     main()

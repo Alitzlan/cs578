@@ -32,11 +32,11 @@ def main():
     filename = 'train.json'
     objfilename = filename + '.dat'
     if os.path.isfile(objfilename):
-        with open(objfilename) as objfile:
+        with open(objfilename, "rb") as objfile:
             bin_data, lbl_data = pickle.load(objfile)
     else:
         bin_data, lbl_data = processfile(filename)
-        with open(objfilename) as objfile:
+        with open(objfilename, "wb") as objfile:
             pickle.dump([bin_data, lbl_data], objfile)
     indices = shuffledata(len(bin_data), 10)
     print 'finish processing data'

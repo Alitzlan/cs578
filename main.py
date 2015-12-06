@@ -28,25 +28,27 @@ def shuffledata(datalen, numpart):
         parts.append(idx[i*step:(i+1)*step])
     return parts
     
-def main():
-    filename = 'train.json'
+def readdata(filename):
     objfilename = filename + '.dat'
     if os.path.isfile(objfilename):
-        with open(objfilename) as objfile:
+        with open(objfilename,'rb') as objfile:
             bin_data, lbl_data = pickle.load(objfile)
     else:
         bin_data, lbl_data = processfile(filename)
-        with open(objfilename) as objfile:
+        with open(objfilename,'wb') as objfile:
             pickle.dump([bin_data, lbl_data], objfile)
+    
+def main():
+    bin_data, lbl_data = readdata('train.json')
     indices = shuffledata(len(bin_data), 10)
     print 'finish processing data'
 
     # Added
-#     print "Starts doing PCA"
-#     num_parameter = len(bin_data[0])
-#     pca = PCA(n_components = 2)
-#     pca.fit(bin_data)
-#     print(pca.explained_variance_ratio_)
+    print "Starts doing PCA"
+    num_parameter = len(bin_data[0])
+    pca = PCA(n_components = 2)
+    pca.fit(bin_data)
+    print(pca.explained_variance_ratio_)
     
 if __name__ == "__main__":
     main()

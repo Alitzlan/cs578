@@ -47,13 +47,36 @@ def main():
     # Added for PCA
     print "Starts doing PCA"
     num_parameter = len(bin_data[0])
+    print "Originally " + str(num_parameter) + " parameters"
     pca = PCA(n_components = num_parameter)
     pca.fit(bin_data)
     print(pca.explained_variance_ratio_)
-    bin_data_pca = np.multiply(bin_data, pca.components_)
+    epsilon = 0.95
+    accum_epsilon = 0.0
+    for i in range(len(pca.explained_variance_ratio_)):
+        accum_epsilon = accum_epsilon + pca.explained_variance_ratio_[i]
+        if accum_epsilon > epsilon:
+            break
+    new_num_parameter = i # m dimensional
+    print "after PCA, " + str(new_num_parameter) + " parameters"
+
+    print pca.components_[0:new_num_parameter, ]
+
+    #x_i = pca.components_[i,] bin_data[]
+    bin_data_pca = []
+    for j in xrange(len(bin_data)):
+        x_j = []
+        for i in xrange(len(pca.components_[0:new_num_parameter, ])):
+            x_j_i = np.dot(pca.components_[i], bin_data[j])
+            x_j.append(x_j_i)
+        bin_data_pca.append(x_j)
+    bin_data_pca = np.array(bin_data_pca)
     print bin_data_pca
+
+    # for x in bin_data_pca:
+    #     print list(x)
     # end of PCA
 
-    
+
 if __name__ == "__main__":
     main()

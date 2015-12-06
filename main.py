@@ -2,7 +2,9 @@ from __future__ import division
 import json
 import random
 import itertools
+import pickle
 import numpy as np
+import os.path
 from collections import Counter
 from sklearn.decomposition import PCA
 
@@ -27,15 +29,24 @@ def shuffledata(datalen, numpart):
     return parts
     
 def main():
-    bin_data, lbl_data = processfile('train.json')
+    filename = 'train.json'
+    objfilename = filename + '.dat'
+    if os.path.isfile(objfilename):
+        with open(objfilename) as objfile:
+            bin_data, lbl_data = pickle.load(objfile)
+    else:
+        bin_data, lbl_data = processfile(filename)
+        with open(objfilename) as objfile:
+            pickle.dump([bin_data, lbl_data], objfile)
     indices = shuffledata(len(bin_data), 10)
+    print 'finish processing data'
 
     # Added
-    print "Starts doing PCA"
-    num_parameter = len(bin_data[0])
-    pca = PCA(n_components = 2)
-    pca.fit(bin_data)
-    print(pca.explained_variance_ratio_)
+#     print "Starts doing PCA"
+#     num_parameter = len(bin_data[0])
+#     pca = PCA(n_components = 2)
+#     pca.fit(bin_data)
+#     print(pca.explained_variance_ratio_)
     
 if __name__ == "__main__":
     main()

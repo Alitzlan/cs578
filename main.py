@@ -7,7 +7,7 @@ import numpy as np
 import os.path
 import sys
 from collections import Counter
-
+from sklearn.decomposition import PCA
 
 
 def gettagset(filename):
@@ -61,7 +61,6 @@ def loaddata(filename):
     
     return bin_data, lbl_data, tag_set
 
-def 
 
 def shuffledata(datalen, numpart):
     idx = range(0, datalen)
@@ -114,14 +113,51 @@ def nbc(bin_data, lbl_data, indices):
         # print predicted
         print ("Number of mislabeled points out of a total %d points : %d" % (test_data.shape[0], (test_lbl_data != predicted).sum()))
 
-def pca(bin_data):
-    from sklearn.decomposition import PCA
-    # Added for PCA
-    print "Starts doing PCA"
+def loadpca(bin_data, filename):
+    objfilename = filename + '.dat'
     num_parameter = len(bin_data[0])
     print "Originally " + str(num_parameter) + " parameters"
-    filename = 'train.json'
-    bin_data_pca, dummy1, dummy2 = loaddata(filename)
+    if os.path.isfile(objfilename):
+        with open(objfilename,'rb') as objfile:
+            bin_data_pca = np.load(objfile)
+    else:
+        pca = PCA(n_components=num_parameter)
+        pca.fit(bin_data)
+        print(pca.explained_variance_ratio_)
+        epsilon = 0.95
+        accum_epsilon = 0.0
+        for i in range(len(pca.explained_variance_ratio_)):
+            accum_epsilon = accum_epsilon + pca.explained_variance_ratio_[i]
+            if accum_epsilon > epsilon:
+                break
+        new_num_parameter = i # m dimensional
+        print "after PCA, " + str(new_num_parameter) + " parameters"
+
+        print pca.components_[0:new_num_parameter, ]
+
+        #x_i = pca.components_[i,] bin_data[]
+        bin_data_pca = []
+        for j in xrange(len(bin_data)):
+            x_j = []
+            for i in xrange(len(pca.components_[0:new_num_parameter, ])):
+                x_j_i = np.dot(pca.components_[i], bin_data[j])
+                x_j.append(x_j_i)
+            bin_data_pca.append(x_j)
+        bin_data_pca = np.array(bin_data_pca)
+
+        with open(objfilename,'wb') as objfile:
+            np.save(objfile, bin_data_pca)
+    
+    return bin_data_pca
+
+
+def pca(bin_data):
+    
+    # Added for PCA
+    print "Starts doing PCA"
+    
+    filename = 'train.json.pca'
+    bin_data_pca = loadpca(bin_data, filename)
 
     bin_data_pca = np.array(bin_data_pca, dtype="float")
     
@@ -136,7 +172,7 @@ def main():
 
     bin_data_pca = pca(bin_data)
 
-    nbc(bin_data, lbl_data, indices)
+    # nbc(bin_data, lbl_data, indices)
     # end of PCA
 
 if __name__ == "__main__":

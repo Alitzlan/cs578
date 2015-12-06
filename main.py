@@ -28,8 +28,7 @@ def shuffledata(datalen, numpart):
         parts.append(idx[i*step:(i+1)*step])
     return parts
     
-def main():
-    filename = 'train.json'
+def readdata(filename):
     objfilename = filename + '.dat'
     if os.path.isfile(objfilename):
         with open(objfilename, "rb") as objfile:
@@ -38,6 +37,9 @@ def main():
         bin_data, lbl_data = processfile(filename)
         with open(objfilename, "wb") as objfile:
             pickle.dump([bin_data, lbl_data], objfile)
+    
+def main():
+    bin_data, lbl_data = readdata('train.json')
     indices = shuffledata(len(bin_data), 10)
     print 'finish processing data'
 

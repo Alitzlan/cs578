@@ -37,21 +37,23 @@ def readdata(filename):
         bin_data, lbl_data = processfile(filename)
         with open(objfilename, "wb") as objfile:
             pickle.dump([bin_data, lbl_data], objfile)
+    return bin_data, lbl_data
     
 def main():
     bin_data, lbl_data = readdata('train.json')
     indices = shuffledata(len(bin_data), 10)
     print 'finish processing data'
 
-    # Added
+    # Added for PCA
     print "Starts doing PCA"
     num_parameter = len(bin_data[0])
     pca = PCA(n_components = num_parameter)
     pca.fit(bin_data)
     print(pca.explained_variance_ratio_)
-
-    bin_data_pca = np.multiply(bin_data, pca.components)
+    bin_data_pca = np.multiply(bin_data, pca.components_)
     print bin_data_pca
+    # end of PCA
+
     
 if __name__ == "__main__":
     main()

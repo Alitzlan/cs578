@@ -82,10 +82,20 @@ def readdata(filename):
             pickle.dump([bin_data, lbl_data], objfile)
     return bin_data, lbl_data
 
+def get_accuracy(expected, predicted):
+    accuracy = 1 - (expected != predicted).sum() / len(expected)
+    print ("accuracy: %f" % (accuracy))
+    return accuracy
+
 def nbc(bin_data, lbl_data, indices):
     print "Starts nbc"
     from sklearn.naive_bayes import GaussianNB
+    from sklearn.naive_bayes import BernoulliNB
+    from sklearn.naive_bayes import MultinomialNB
+    
     gnb = GaussianNB()
+    bnb = BernoulliNB()
+    mnb = MultinomialNB()
     k = len(indices)
     test_indices = []
     train_indices = []
@@ -104,14 +114,22 @@ def nbc(bin_data, lbl_data, indices):
         test_data = np.take(bin_data, test_indices, axis=0)
         test_lbl_data = np.take(lbl_data, test_indices, axis=0)
 
-        # print train_data
-        # print test_data
+        print ("--------------- iteration %d ----------------" %(i))
+        print ("gnb: ")
         gnb.fit(train_data, train_lbl_data)
         predicted = gnb.predict(test_data)
+        get_accuracy (test_lbl_data, predicted)
 
-        # print test_lbl_data
-        # print predicted
-        print ("Number of mislabeled points out of a total %d points : %d" % (test_data.shape[0], (test_lbl_data != predicted).sum()))
+        print ("bnb: ")
+        bnb.fit(train_data, train_lbl_data)
+        predicted = bnb.predict(test_data)
+        #print ("Number of mislabeled points out of a total %d points : %d" % (test_data.shape[0], (test_lbl_data != predicted).sum()))
+        get_accuracy (test_lbl_data, predicted)
+
+        print ("mnb: ")
+        gnb.fit(train_data, train_lbl_data)
+        predicted = gnb.predict(test_data)
+        get_accuracy (test_lbl_data, predicted)
 
 def loadpca(bin_data, filename):
     objfilename = filename + '.dat'
@@ -126,11 +144,13 @@ def loadpca(bin_data, filename):
         print(pca.explained_variance_ratio_)
         epsilon = 0.95
         accum_epsilon = 0.0
+        print "11111111"
         for i in range(len(pca.explained_variance_ratio_)):
             accum_epsilon = accum_epsilon + pca.explained_variance_ratio_[i]
             if accum_epsilon > epsilon:
                 break
         new_num_parameter = i # m dimensional
+        
         print "after PCA, " + str(new_num_parameter) + " parameters"
 
         print pca.components_[0:new_num_parameter, ]
@@ -141,6 +161,7 @@ def loadpca(bin_data, filename):
             x_j = []
             for i in xrange(len(pca.components_[0:new_num_parameter, ])):
                 x_j_i = np.dot(pca.components_[i], bin_data[j])
+                print x_j_i
                 x_j.append(x_j_i)
             bin_data_pca.append(x_j)
         bin_data_pca = np.array(bin_data_pca)
@@ -170,9 +191,9 @@ def main():
     indices = shuffledata(len(bin_data), k)
     print 'finish processing data'
 
-    bin_data_pca = pca(bin_data)
+    # bin_data_pca = pca(bin_data)
 
-    # nbc(bin_data, lbl_data, indices)
+    nbc(bin_data, lbl_data, indices)
     # end of PCA
 
 if __name__ == "__main__":

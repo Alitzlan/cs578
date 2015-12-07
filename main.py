@@ -87,15 +87,34 @@ def get_accuracy(expected, predicted):
     print ("accuracy: %f" % (accuracy))
     return accuracy
 
-def nbc(bin_data, lbl_data, indices):
-    print "Starts nbc"
+def gnb_fit(train_data, train_lbl_data):
     from sklearn.naive_bayes import GaussianNB
-    from sklearn.naive_bayes import BernoulliNB
-    from sklearn.naive_bayes import MultinomialNB
-    
+    print "Starts gnb"
+
     gnb = GaussianNB()
+
+    gnb.fit(train_data, train_lbl_data)
+    return gnb
+
+def bnb_fit(train_data, train_lbl_data):
+    from sklearn.naive_bayes import BernoulliNB
+    print "Starts bnb"
+
     bnb = BernoulliNB()
+    bnb.fit(train_data, train_lbl_data)
+    return bnb
+
+def mnb_fit(train_data, train_lbl_data):
+    from sklearn.naive_bayes import MultinomialNB
+    print "Starts mnb"
+
     mnb = MultinomialNB()
+
+    mnb.fit(train_data, train_lbl_data)
+    return mnb
+
+
+def k_fold(bin_data, lbl_data, indices, fit_func):
     k = len(indices)
     test_indices = []
     train_indices = []
@@ -114,22 +133,12 @@ def nbc(bin_data, lbl_data, indices):
         test_data = np.take(bin_data, test_indices, axis=0)
         test_lbl_data = np.take(lbl_data, test_indices, axis=0)
 
+        model = fit_func(train_data,train_lbl_data)
+        
         print ("--------------- iteration %d ----------------" %(i))
-        print ("gnb: ")
-        gnb.fit(train_data, train_lbl_data)
-        predicted = gnb.predict(test_data)
+        predicted = model.predict(test_data)
         get_accuracy (test_lbl_data, predicted)
-
-        print ("bnb: ")
-        bnb.fit(train_data, train_lbl_data)
-        predicted = bnb.predict(test_data)
         #print ("Number of mislabeled points out of a total %d points : %d" % (test_data.shape[0], (test_lbl_data != predicted).sum()))
-        get_accuracy (test_lbl_data, predicted)
-
-        print ("mnb: ")
-        gnb.fit(train_data, train_lbl_data)
-        predicted = gnb.predict(test_data)
-        get_accuracy (test_lbl_data, predicted)
 
 def loadpca(bin_data, filename):
     objfilename = filename + '.dat'
@@ -144,7 +153,6 @@ def loadpca(bin_data, filename):
         print(pca.explained_variance_ratio_)
         epsilon = 0.95
         accum_epsilon = 0.0
-        print "11111111"
         for i in range(len(pca.explained_variance_ratio_)):
             accum_epsilon = accum_epsilon + pca.explained_variance_ratio_[i]
             if accum_epsilon > epsilon:
@@ -193,8 +201,12 @@ def main():
 
     # bin_data_pca = pca(bin_data)
 
-    nbc(bin_data, lbl_data, indices)
-    # end of PCA
+    k_fold(bin_data, lbl_data, indices, gnb_fit)
+
+    k_fold(bin_data, lbl_data, indices, bnb_fit)
+
+    k_fold(bin_data, lbl_data, indices, mnb_fit)
+
 
 if __name__ == "__main__":
     main()

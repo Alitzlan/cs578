@@ -113,6 +113,12 @@ def mnb_fit(train_data, train_lbl_data):
     mnb.fit(train_data, train_lbl_data)
     return mnb
 
+def dt_fit(train_data, train_lbl_data):
+    from sklearn import tree
+    print "Starts DT"
+    clf = tree.DecisionTreeClassifier()
+    clf = clf.fit(train_data, train_lbl_data)
+    return clf
 
 def k_fold(bin_data, lbl_data, indices, fit_func):
     k = len(indices)
@@ -139,6 +145,7 @@ def k_fold(bin_data, lbl_data, indices, fit_func):
         predicted = model.predict(test_data)
         get_accuracy (test_lbl_data, predicted)
         #print ("Number of mislabeled points out of a total %d points : %d" % (test_data.shape[0], (test_lbl_data != predicted).sum()))
+
 
 def loadpca(bin_data, filename):
     objfilename = filename + '.dat'
@@ -201,12 +208,13 @@ def main():
 
     # bin_data_pca = pca(bin_data)
 
-    k_fold(bin_data, lbl_data, indices, gnb_fit)
+    #k_fold(bin_data, lbl_data, indices, gnb_fit)
 
-    k_fold(bin_data, lbl_data, indices, bnb_fit)
+    #k_fold(bin_data, lbl_data, indices, bnb_fit)
 
-    k_fold(bin_data, lbl_data, indices, mnb_fit)
+    #k_fold(bin_data, lbl_data, indices, mnb_fit)
 
+    k_fold(bin_data, lbl_data, indices, dt_fit)
 
 if __name__ == "__main__":
     main()

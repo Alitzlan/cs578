@@ -74,6 +74,36 @@ def shuffledata(datalen, numpart):
 
 def subset(bin_data, lbl_data, start=0, end=-1):
     return bin_data[start:end], lbl_data[start:end]
+
+def svdfit(train_data, ncomponents=1000):
+    svd = TruncatedSVD(n_components=ncomponents)
+    normalizer = Normalizer(copy=False)
+    lsa = make_pipeline(svd, normalizer)
+    lsa.fit(train_data)
+    return lsa
+
+def loadmodel(filename=None, fitfunc=None, data=None, label=None):
+    model = None
+    if filename is not None and os.path.isfile(filename):
+        with open(filename, "rb") as modelfile:
+            print "loading model from file..."
+            model = pickle.load(modelfile)
+    elif fitfunc is not None and data is not None and label is not None:
+        model = fitfunc(data, label)
+        if filename is not None:
+            with open(filename, "wb") as modelfile:
+                print "saving model to file..."
+                pickle.dump(model, modelfile)
+    else:
+        raise Exception("Load model failed", "Not enough parameter.")
+    return model
+
+def neuralfit(train_data, train_label, regulation=0.00001, learnrate=0.001, ncomponents=320, iteration=10):
+    logistic = linear_model.LogisticRegression(C=1/regulation)
+    rbm = BernoulliRBM(verbose=True, learning_rate=learnrate, n_components=ncomponents, n_iter=iteration)
+    classifier = Pipeline(steps=[('rbm', rbm),('logistic', logistic)])
+    classifier.fit(train_data, train_label)
+    return classifier
     
 def main():
     bin_data, lbl_data, tag_set = loaddata('train.json')
@@ -84,52 +114,11 @@ def main():
     bin_data = np.array(bin_data,dtype="float")
     print 'finish processing data'
 
-    svd = TruncatedSVD(3000)
-    normalizer = Normalizer(copy=False)
-    lsa = make_pipeline(svd, normalizer)
-    bin_data = lsa.fit_transform(bin_data)
-    logistic = linear_model.LogisticRegression(C=100000)
-    rbm = BernoulliRBM(verbose=True, learning_rate=0.001)
-    classifier = Pipeline(steps=[('rbm', rbm),('logistic', logistic)])
-    classifier.fit(bin_data, lbl_data)
-    print("Logistic regression using RBM features:\n%s\n" % (
-    metrics.classification_report(
-        tlbl_data,
-        classifier.predict(lsa.transform(tbin_data)))))
-    print classifier.predict(lsa.transform(tbin_data))
-
-#     # Added for PCA
-#     print "Starts doing PCA"
-#     num_parameter = len(bin_data[0])
-#     print "Originally " + str(num_parameter) + " parameters"
-#     pca = PCA(n_components = num_parameter)
-#     pca.fit(bin_data)
-#     print(pca.explained_variance_ratio_)
-#     epsilon = 0.95
-#     accum_epsilon = 0.0
-#     for i in range(len(pca.explained_variance_ratio_)):
-#         accum_epsilon = accum_epsilon + pca.explained_variance_ratio_[i]
-#         if accum_epsilon > epsilon:
-#             break
-#     new_num_parameter = i # m dimensional
-#     print "after PCA, " + str(new_num_parameter) + " parameters"
-# 
-#     print pca.components_[0:new_num_parameter, ]
-# 
-#     #x_i = pca.components_[i,] bin_data[]
-#     bin_data_pca = []
-#     for j in xrange(len(bin_data)):
-#         x_j = []
-#         for i in xrange(len(pca.components_[0:new_num_parameter, ])):
-#             x_j_i = np.dot(pca.components_[i], bin_data[j])
-#             x_j.append(x_j_i)
-#         bin_data_pca.append(x_j)
-#     bin_data_pca = np.array(bin_data_pca)
-#     print bin_data_pca
-
-    # for x in bin_data_pca:
-    #     print list(x)
-    # end of PCA
-
+    svd = svdfit(bin_data)
+    bin_data = svd.transform(bin_data)
+    nn = loadmodel("neuralmodel", neuralfit, bin_data, lbl_data)
+    res = nn.predict(svd.transform(tbin_data))
+    print res
+                     
 if __name__ == "__main__":
     main()

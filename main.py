@@ -90,6 +90,7 @@ def loadmodel(filename=None, fitfunc=None, data=None, label=None):
             print "loading model from file..."
             model = pickle.load(modelfile)
     elif fitfunc is not None and data is not None:
+        print "file not exist. training model..."
         model = fitfunc(data, label)
         if filename is not None:
             with open(filename, "wb") as modelfile:
@@ -104,7 +105,12 @@ def neuralfit(train_data, train_label, regulation=0.00001, learnrate=0.001, ncom
     rbm = BernoulliRBM(verbose=True, learning_rate=learnrate, n_components=ncomponents, n_iter=iteration)
     classifier = Pipeline(steps=[('rbm', rbm),('logistic', logistic)])
     classifier.fit(train_data, train_label)
-    return classifie
+    return classifier
+
+def logisticfit(train_data, train_label, regulation=0.00001):
+    classifier = linear_model.LogisticRegression(C=1/regulation)
+    classifier.fit(train_data, train_label)
+    return classifier
 
 def get_accuracy(expected, predicted):
     accuracy = 1 - (expected != predicted).sum() / len(expected)
@@ -238,21 +244,11 @@ def main():
     nn = loadmodel("neuralmodel", neuralfit, bin_data, lbl_data)
     res = nn.predict(svd.transform(tbin_data))
     print res
-    
-    bin_data, lbl_data, tag_set = loaddata('train.json')
-    k = 10 # k fold
-    indices = shuffledata(len(bin_data), k)
-    print 'finish processing data'
-
-    # bin_data_pca = pca(bin_data)
-
-    #k_fold(bin_data, lbl_data, indices, gnb_fit)
-
-    #k_fold(bin_data, lbl_data, indices, bnb_fit)
-
-    #k_fold(bin_data, lbl_data, indices, mnb_fit)
-
-    k_fold(bin_data, lbl_data, indices, dt_fit)
+    lr = loadmodel("logisticmodel", logisticfit, bin_data, lbl_data)
+    print("Logistic regression using raw features:\n%s\n" % (
+    metrics.classification_report(
+        tlbl_data,
+        lr.predict(svd.transform(tbin_data)))))
 
 if __name__ == "__main__":
     main()

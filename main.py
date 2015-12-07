@@ -77,14 +77,14 @@ def subset(bin_data, lbl_data, start=0, end=-1):
     
 def main():
     bin_data, lbl_data, tag_set = loaddata('train.json')
-    tbin_data, tlbl_data = subset(bin_data, lbl_data, start=1000, end=2000)
-    bin_data, lbl_data = subset(bin_data, lbl_data, end=1000)
+    tbin_data, tlbl_data = subset(bin_data, lbl_data, start=5000, end=6000)
+    bin_data, lbl_data = subset(bin_data, lbl_data, end=5000)
     indices = shuffledata(len(bin_data), 10)
     # restore format
     bin_data = np.array(bin_data,dtype="float")
     print 'finish processing data'
 
-    svd = TruncatedSVD(1000)
+    svd = TruncatedSVD(3000)
     normalizer = Normalizer(copy=False)
     lsa = make_pipeline(svd, normalizer)
     bin_data = lsa.fit_transform(bin_data)
